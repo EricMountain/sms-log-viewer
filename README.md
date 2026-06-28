@@ -13,10 +13,48 @@ cd sms-log-viewer
 
 `run.sh` pulls the latest code, installs dependencies (only when needed), builds a self-contained `dist/index.html`, and opens it in your browser.
 
-## Requirements
+## Prerequisites
 
-- **Node.js 18+** — [nodejs.org](https://nodejs.org)
-- A modern browser (Chrome, Firefox, Safari, Edge)
+You need **Git** and **Node.js 18+**. A modern browser (Chrome, Firefox, Safari, Edge) is also required but is almost certainly already installed.
+
+### macOS
+
+```bash
+# Install Homebrew if you don't have it (https://brew.sh)
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+brew install git node
+```
+
+### Ubuntu / Debian
+
+The Node.js version in the default apt repository is often too old. Use the NodeSource package:
+
+```bash
+sudo apt update && sudo apt install -y git curl
+
+# Add NodeSource LTS repository, then install Node.js
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt install -y nodejs
+```
+
+### Fedora
+
+```bash
+sudo dnf install -y git nodejs
+```
+
+The `nodejs` package in Fedora 38+ ships Node 18 or later. On older releases, pin a newer stream:
+
+```bash
+sudo dnf module enable nodejs:20 -y && sudo dnf install -y nodejs
+```
+
+### Arch Linux
+
+```bash
+sudo pacman -S --needed git nodejs npm
+```
 
 ## Usage
 
