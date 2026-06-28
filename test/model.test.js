@@ -48,6 +48,37 @@ describe('buildThreads', () => {
     const alice = threads.find(t => t.name === 'Alice')
     expect(alice.messageCount).toBe(2)
   })
+
+  it('merges SMS with same number written with and without spaces', () => {
+    const spaced  = { kind: 'sms', address: '+33 1 23 45 67 89', contactName: 'Alice', body: 'a', date: 1, type: 1 }
+    const compact = { kind: 'sms', address: '+33123456789',      contactName: 'Alice', body: 'b', date: 2, type: 2 }
+    const threads = buildThreads([spaced, compact])
+    expect(threads.length).toBe(1)
+    expect(threads[0].messageCount).toBe(2)
+  })
+
+  it('groups space-separated multi-number SMS address as a group thread', () => {
+    const group = { kind: 'sms', address: '+33111111111 +33222222222', contactName: 'A', body: 'hi', date: 1, type: 1 }
+    const solo  = { kind: 'sms', address: '+33111111111',              contactName: 'A', body: 'yo', date: 2, type: 1 }
+    const threads = buildThreads([group, solo])
+    expect(threads.length).toBe(2)
+  })
+
+  it('does not treat MMS with type-130 duplicate addr as a group', () => {
+    // Three addrs but only 2 unique phone numbers → 1-on-1, not group
+    const mms = {
+      kind: 'mms', address: '+33999888777', contactName: 'Carol', date: 1, msgBox: 1,
+      parts: [], addrs: [
+        { address: '+33999888777', type: 130 },
+        { address: '+33999888777', type: 137 },
+        { address: '+33000000000', type: 151 },
+      ],
+    }
+    const sms = { kind: 'sms', address: '+33999888777', contactName: 'Carol', body: 'hi', date: 2, type: 1 }
+    const threads = buildThreads([mms, sms])
+    expect(threads.length).toBe(1)
+    expect(threads[0].messageCount).toBe(2)
+  })
 })
 
 describe('messageText', () => {

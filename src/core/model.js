@@ -46,12 +46,40 @@ function normalizeAddress(addr) {
   return addr.replace(/[\s\-().]/g, '')
 }
 
-function threadKey(msg) {
-  // Group MMS: more than one type-151 (recipient) addr → group thread
-  if (msg.kind === 'mms' && msg.addrs.length > 2) {
-    const participants = msg.addrs.map(a => normalizeAddress(a.address)).sort()
-    return participants.join(',')
+/**
+ * Splits an address attribute that may contain multiple phone numbers.
+ * Each international number starts with '+'; local numbers stay together.
+ * e.g. "+33782027451 +33687312454 +33782426985" → three normalized numbers.
+ * e.g. "+33 6 50 47 07 84" (one number with spaces) → one normalized number.
+ */
+function splitAddresses(addr) {
+  const cleaned = addr.trim().replace(/[,~]+/g, ' ')
+  const numbers = []
+  let current = ''
+  for (const token of cleaned.split(/\s+/).filter(Boolean)) {
+    if (token.startsWith('+') && current) {
+      numbers.push(current)
+      current = token
+    } else {
+      current += token
+    }
   }
+  if (current) numbers.push(current)
+  return numbers.filter(n => n.length > 3)
+}
+
+function threadKey(msg) {
+  if (msg.kind === 'mms' && msg.addrs.length > 0) {
+    // Deduplicate first — some 1-on-1 MMS have the partner's number in both
+    // type-130 and type-137 slots, inflating the count.
+    const uniqueAddrs = [...new Set(msg.addrs.map(a => normalizeAddress(a.address)))]
+    if (uniqueAddrs.length > 2) {
+      return uniqueAddrs.sort().join(',')
+    }
+  }
+  // The address attribute may be a space-separated list of phone numbers (group SMS).
+  const parts = splitAddresses(msg.address)
+  if (parts.length > 1) return parts.sort().join(',')
   return normalizeAddress(msg.address)
 }
 
