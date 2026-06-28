@@ -4,14 +4,35 @@
  */
 export function buildThreads(messages) {
   const threadMap = new Map()
+  // address → best known display name, built incrementally
+  const addrToName = new Map()
 
   for (const msg of messages) {
+    // Update the address→name map whenever we see a real contact name
+    const name = resolveName(msg)
+    if (name !== msg.address) {
+      const norm = normalizeAddress(msg.address)
+      if (!addrToName.has(norm)) addrToName.set(norm, name)
+      // Also index individual numbers from multi-number address fields
+      for (const part of splitAddresses(msg.address)) {
+        if (!addrToName.has(part)) addrToName.set(part, name)
+      }
+    }
+    // MMS addr elements may carry names too (they share the same contact_name)
+    if (msg.kind === 'mms' && name !== msg.address) {
+      for (const a of msg.addrs) {
+        const norm = normalizeAddress(a.address)
+        if (!addrToName.has(norm)) addrToName.set(norm, name)
+      }
+    }
+
     const key = threadKey(msg)
     if (!threadMap.has(key)) {
       threadMap.set(key, {
         id: key,
         address: msg.address,
-        name: resolveName(msg),
+        name,
+        participants: null, // filled for group threads below
         messages: [],
         lastDate: 0,
         lastPreview: '',
@@ -27,8 +48,6 @@ export function buildThreads(messages) {
       thread.lastDate = msg.date
       thread.lastPreview = enriched.text || mediaPreview(msg)
     }
-    // Prefer the most informative contact name seen in the thread
-    const name = resolveName(msg)
     if (name && name !== msg.address && thread.name === thread.address) {
       thread.name = name
     }
@@ -37,6 +56,15 @@ export function buildThreads(messages) {
   for (const thread of threadMap.values()) {
     thread.messages.sort((a, b) => a.date - b.date)
     thread.messageCount = thread.messages.length
+
+    // Resolve participant names for group threads (key is comma-separated addresses)
+    if (thread.id.includes(',')) {
+      thread.participants = thread.id.split(',').map(addr => ({
+        address: addr,
+        name: addrToName.get(addr) || addr,
+      }))
+      thread.name = thread.participants.map(p => p.name).join(', ')
+    }
   }
 
   return [...threadMap.values()].sort((a, b) => b.lastDate - a.lastDate)

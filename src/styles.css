@@ -211,6 +211,17 @@ html, body {
 }
 .thread-header-info span { font-size: 0.82em; color: var(--text-secondary); }
 
+.thread-header-info .participant {
+  display: inline-block;
+  font-weight: 600;
+  font-size: 0.95em;
+}
+.thread-header-info .participant + .participant::before {
+  content: ', ';
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
 .search-bar input {
   padding: 6px 14px;
   border-radius: 20px;

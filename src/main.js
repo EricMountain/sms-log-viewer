@@ -129,9 +129,20 @@ let activeThread = null
 function openThread(thread) {
   activeThread = thread
   app.querySelector('#thread-header').classList.remove('hidden')
-  app.querySelector('#thread-name').textContent = thread.name
-  app.querySelector('#thread-address').textContent =
-    thread.name !== thread.address ? thread.address : ''
+
+  if (thread.participants) {
+    // Group thread: show each participant on its own line
+    const nameEl = app.querySelector('#thread-name')
+    nameEl.innerHTML = thread.participants
+      .map(p => `<span class="participant">${escapeHtml(p.name)}</span>`)
+      .join('')
+    app.querySelector('#thread-address').textContent = ''
+  } else {
+    app.querySelector('#thread-name').textContent = thread.name
+    app.querySelector('#thread-address').textContent =
+      thread.name !== thread.address ? thread.address : ''
+  }
+
   app.querySelector('#empty-state').classList.add('hidden')
   app.querySelector('#search-results-pane').classList.add('hidden')
   app.querySelector('#message-container').classList.remove('hidden')
