@@ -6,6 +6,9 @@ cd "$(dirname "$0")"
 # Pull latest if we're in a git repo with a remote
 if git remote | grep -q .; then
   echo "Pulling latest changes…"
+  # npm install can update package-lock.json locally; discard those changes
+  # before pulling so upstream always takes precedence.
+  git restore package.json package-lock.json 2>/dev/null || true
   git pull
 fi
 
