@@ -11,7 +11,7 @@ cd sms-log-viewer
 ./run.sh
 ```
 
-`run.sh` pulls the latest code, installs dependencies (only when needed), builds a self-contained `dist/index.html`, and opens it in your browser.
+`run.sh` handles everything: it pulls the latest code, runs `npm install` (only when needed), builds a self-contained `dist/index.html`, and opens it in your browser. You do not need to run `npm install` manually.
 
 ## Prerequisites
 

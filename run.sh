@@ -12,7 +12,7 @@ fi
 # Install deps only when necessary (node_modules missing or lockfile newer)
 if [ ! -d node_modules ] || [ package-lock.json -nt node_modules/.package-lock.json 2>/dev/null ]; then
   echo "Installing dependencies…"
-  npm install --omit=dev 2>/dev/null || npm install
+  npm install
 fi
 
 echo "Building…"
